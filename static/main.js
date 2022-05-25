@@ -156,6 +156,22 @@ const load = () => {
                 break;
         }
     });
+    document.addEventListener('swiped', event => {
+        switch(event.detail.dir) {
+            case 'up':
+                moveToSide(1);
+                break;
+            case 'down':
+                moveToSide(2);
+                break;
+            case 'left':
+                moveToSide(3);
+                break;
+            case 'right':
+                moveToSide(4);
+                break;
+        }
+    });
     restartButton.onclick = () => {
         generateBoard();
 
