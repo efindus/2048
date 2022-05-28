@@ -6,6 +6,13 @@
     src: url('./Roboto.woff2') format('woff2');
 }
 
+/* Animations */
+@keyframes fadein {
+    0% { opacity: 0; }
+    100% { opacity: 1;}
+}
+
+/* Styles */
 *
 {
     box-sizing: border-box;
@@ -66,6 +73,28 @@ body
     align-items: center;
     font-size: min(5.7vh, 5.7vw);
     font-weight: 500;
+    border-radius: 8px;
+}
+
+.new-tile
+{
+    animation-delay: 0.3s;
+    animation-duration: 0.5s;
+    animation-name: fadein;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+    opacity: 0;
+    animation-fill-mode: forwards;
+}
+
+.active-tile
+{
+    background-color: #545854;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
     border-radius: 8px;
 }
 

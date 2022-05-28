@@ -14,16 +14,46 @@ const scoreLabel = document.getElementById('score');
 const restartButton = document.getElementById('restart-button');
 let score = 0;
 
-const getValue = (x, y, isSideways) => {
-    if (isSideways) x += y, y = x - y, x = x - y;
-
-    return document.getElementById(`tile-${x}-${y}`).innerText;
+const swap = (a, b) => {
+    a += b, b = a - b, a = a - b;
+    return [ a, b ];
 }
 
-const setValue = (val, x, y, isSideways) => {
-    if (isSideways) x += y, y = x - y, x = x - y;
+const getValue = (x, y, isSideways = false) => {
+    if (isSideways) [ x, y ] = swap(x, y);
 
-    document.getElementById(`tile-${x}-${y}`).innerHTML = val;
+    const tile = document.getElementById(`tile-${x}-${y}`);
+    return tile.innerText !== '' ? tile.children[0].innerText : '';
+}
+
+/**
+ * @param {object} data
+ * @param {string?} data.value
+ * @param {number} data.x
+ * @param {number} data.y
+ * @param {object} data.lastPosition
+ * @param {number?} data.lastPosition.x
+ * @param {number?} data.lastPosition.y
+ * @param {boolean?} data.isSideways
+ * @param {boolean?} data.doNotRecord
+ */
+const setValue = (data) => {
+    if (data.isSideways) [ data.x, data.y ] = swap(data.x, data.y), data.lastPosition ? 
+                         [ data.lastPosition.x, data.lastPosition.y ] = swap(data.lastPosition.x, data.lastPosition.y) : null;
+
+    if (data.lastPosition) setValue({ x: data.lastPosition.x, y: data.lastPosition.y, doNotRecord: true });
+
+    const tile = document.getElementById(`tile-${data.x}-${data.y}`);
+    tile.innerHTML = data.value ? `<div class="active-tile ${data.lastPosition ? '' : ' new-tile'}">${data.value}</div>` : '';
+
+    if (data.lastPosition) {
+        const block = tile.children[0], offset = -19 * (data.isSideways ? data.y - data.lastPosition.y : data.x - data.lastPosition.x);
+
+        block.style.transform = `translate${data.isSideways ? 'X' : 'Y'}(${offset < 0 ? 'max' : 'min'}(${offset}vh, ${offset}vw))`;
+        block.style.transition = 'transform 0.3s ease 0s';
+        setTimeout(() => block.style.transform = 'none');
+    }
+
 }
 
 const random = (min, max) => Math.round(min + (max - min) * Math.random());
@@ -70,10 +100,10 @@ const verifyMoves = () => {
 const spawnNumber = () => {
     let x = random(0, 3), y = random(0, 3);
 
-    while(getValue(x, y) !== '') x = random(0, 3), y = random(0, 3);
+    while(getValue(x, y, false) !== '') x = random(0, 3), y = random(0, 3);
 
-    if (Math.random() < 0.7) setValue('2', x, y);
-    else setValue('4', x, y);
+    if (Math.random() < 0.7) setValue({ value: '2', x, y });
+    else setValue({ value: '4', x, y });
 }
 
 const gen4X4Val = (val) => {
@@ -106,15 +136,15 @@ const moveToSide = (side) => {
                         scoreLabel.innerHTML = `Score: ${score}`;
 
                         moved = true;
-                        setValue('', x, y, isSideways);
-                        setValue(currentValue, i, y, isSideways);
+                        setValue({ value: currentValue, x: i, y, isSideways, lastPosition: { x, y } });
 
                         lockedIn[i][y] = true;
                         break;
-                    } else if (x !== i + 1 * direction && (value !== '' || (i === indexStart && (i -= direction || true)) || lockedIn[i][y])) {
-                        moved = true;
-                        setValue('', x, y, isSideways);
-                        setValue(currentValue, i + 1 * direction, y, isSideways);
+                    } else if (value !== '' || (i === indexStart && (i -= direction || true)) || lockedIn[i][y]) {
+                        if (x !== i + 1 * direction) {
+                            moved = true;
+                            setValue({ value: currentValue, x: i + 1 * direction, y, isSideways, lastPosition: { x, y } });
+                        }
                         break;
                     }
                 }
