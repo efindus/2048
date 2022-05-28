@@ -1,5 +1,5 @@
 const content = document.getElementById('content');
-content.innerHTML = 
+content.innerHTML =
 `<div class="title">2048</div>
 <div id="score">Score: 2048</div>
 <div id="box"></div>
@@ -49,6 +49,7 @@ const verifyMoves = () => {
     for (let side = 0; side < 2; side++) {
         for (let x = 0; x < 4; x++) {
             let lastTile = '';
+
             for (let y = 0; y < 4; y++) {
                 let currentTile = getValue(x, y, side);
                 if (currentTile !== '') {
@@ -71,7 +72,7 @@ const spawnNumber = () => {
 
     while(getValue(x, y) !== '') x = random(0, 3), y = random(0, 3);
 
-    if (Math.random() < 0.6) setValue('2', x, y);
+    if (Math.random() < 0.7) setValue('2', x, y);
     else setValue('4', x, y);
 }
 
@@ -84,9 +85,9 @@ const gen4X4Val = (val) => {
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const moveToSide = (side) => {
     const lockedIn = gen4X4Val(false);
-    let indexStart = 0, indexEnd = 3, direction = 1, isSideways = false;
     let moved = false;
 
+    let indexStart = 0, indexEnd = 3, direction = 1, isSideways = false;
     if (side === 3 || side === 4) isSideways = true;
     if (side === 2 || side === 4) indexStart = 3, indexEnd = 0, direction = -1;
 
@@ -98,17 +99,20 @@ const moveToSide = (side) => {
             if (currentValue !== '') {
                 for (let i = x - 1 * direction; i !== indexStart - 1 * direction; i -= direction) {
                     const value = getValue(i, y, isSideways);
+
                     if (value === currentValue && !lockedIn[i][y]) {
-                        moved = true;
                         currentValue = `${+value * 2}`;
                         score += +currentValue;
                         scoreLabel.innerHTML = `Score: ${score}`;
+
+                        moved = true;
                         setValue('', x, y, isSideways);
                         setValue(currentValue, i, y, isSideways);
+
                         lockedIn[i][y] = true;
                         break;
-                    } else if (value !== '' || (i === indexStart && (i -= direction || true)) || lockedIn[i][y]) {
-                        if (x !== i + 1 * direction) moved = true;
+                    } else if (x !== i + 1 * direction && (value !== '' || (i === indexStart && (i -= direction || true)) || lockedIn[i][y])) {
+                        moved = true;
                         setValue('', x, y, isSideways);
                         setValue(currentValue, i + 1 * direction, y, isSideways);
                         break;
@@ -125,10 +129,12 @@ const moveToSide = (side) => {
 }
 
 const generateBoard = () => {
+    score = 0;
+
     boxContainer.innerHTML = '';
     title.innerHTML = '2048';
-    score = 0;
     scoreLabel.innerHTML = 'Score: 0';
+
     for (let i = 0; i < 16; i++) {
         boxContainer.innerHTML += `<div id="tile-${Math.floor(i / 4)}-${i % 4}"></div>`;
     }
@@ -140,42 +146,31 @@ const generateBoard = () => {
 const load = () => {
     generateBoard();
 
-    document.addEventListener('keydown', event => {
-        switch(event.keyCode) {
+    const eventHandler = event => {
+        switch(event?.detail?.dir ?? event.keyCode) {
             case 38:
-                moveToSide(1);
-                break;
-            case 40:
-                moveToSide(2);
-                break;
-            case 37:
-                moveToSide(3);
-                break;
-            case 39:
-                moveToSide(4);
-                break;
-        }
-    });
-    document.addEventListener('swiped', event => {
-        switch(event.detail.dir) {
             case 'up':
                 moveToSide(1);
                 break;
+            case 40:
             case 'down':
                 moveToSide(2);
                 break;
+            case 37:
             case 'left':
                 moveToSide(3);
                 break;
+            case 39:
             case 'right':
                 moveToSide(4);
                 break;
         }
-    });
-    restartButton.onclick = () => {
-        generateBoard();
-
     }
+
+    document.addEventListener('keydown', eventHandler);
+    document.addEventListener('swiped', eventHandler);
+
+    restartButton.onclick = generateBoard;
 }
 
 load();
