@@ -12,7 +12,9 @@ const title = document.querySelector('.title');
 const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
 const restartButton = document.getElementById('restart-button');
-let score = 0;
+const undoButton = document.getElementById('undo-button');
+const moves = [];
+let score = 0, currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
 
 const swap = (a, b) => {
     a += b, b = a - b, a = a - b;
@@ -41,6 +43,13 @@ const setValue = (data) => {
     if (data.isSideways) [ data.x, data.y ] = swap(data.x, data.y), data.lastPosition ? 
                          [ data.lastPosition.x, data.lastPosition.y ] = swap(data.lastPosition.x, data.lastPosition.y) : null;
 
+    if (!data.doNotRecord) {
+        if (data.value && getValue(data.x, data.y) !== '') currentMove.changes.push({ value: getValue(data.x, data.y), add: { x: data.x, y: data.y } });
+
+        if (!data.lastPosition) currentMove.changes.push({ remove: { x: data.x, y: data.y } });
+        else currentMove.changes.push({ value: getValue(data.lastPosition.x, data.lastPosition.y), add: data.lastPosition, remove: { x: data.x, y: data.y } });
+    }
+
     if (data.lastPosition) setValue({ x: data.lastPosition.x, y: data.lastPosition.y, doNotRecord: true });
 
     const tile = document.getElementById(`tile-${data.x}-${data.y}`);
@@ -53,7 +62,6 @@ const setValue = (data) => {
         block.style.transition = 'transform 0.3s ease 0s';
         setTimeout(() => block.style.transform = 'none');
     }
-
 }
 
 const random = (min, max) => Math.round(min + (max - min) * Math.random());
@@ -114,6 +122,12 @@ const gen4X4Val = (val) => {
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const moveToSide = (side) => {
+    moves.push({
+        score,
+        changes: [],
+    });
+
+    currentMove = moves[moves.length - 1];
     const lockedIn = gen4X4Val(false);
     let moved = false;
 
@@ -155,7 +169,9 @@ const moveToSide = (side) => {
     if (moved) {
         if (verifySpace()) spawnNumber();
         if (!verifySpace() && !verifyMoves()) document.querySelector('.title').innerHTML = 'You lost!';
-    }
+    } else moves.pop();
+
+    if (moves.length > 25) moves.shift();
 }
 
 const generateBoard = () => {
@@ -201,6 +217,27 @@ const load = () => {
     document.addEventListener('swiped', eventHandler);
 
     restartButton.onclick = generateBoard;
+    undoButton.onclick = () => {
+        if (moves.length) {
+            currentMove = moves.pop();
+            score = currentMove.score;
+            scoreLabel.innerHTML = `Score: ${score}`;
+            currentMove.changes.reverse();
+
+            for (const change of currentMove.changes) {
+                if (change.remove) setValue({ x: change.remove.x, y: change.remove.y, doNotRecord: true });
+                if (change.add) {
+                    setValue({
+                        value: change.value,
+                        x: change.add.x,
+                        y: change.add.y,
+                        lastPosition: change.remove,
+                        doNotRecord: true,
+                    });
+                }
+            }
+        }
+    }
 }
 
 load();
