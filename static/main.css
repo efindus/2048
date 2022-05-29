@@ -156,6 +156,20 @@ body
     background-color: #130fee;
 }
 
+.nojs
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+}
+
 @media only screen and (max-width: 650px) {
     .title
     {
