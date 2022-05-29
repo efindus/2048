@@ -80,12 +80,14 @@ body
 .new-tile
 {
     animation-delay: 0.3s;
-    animation-duration: 0.5s;
-    animation-name: fadein;
-    animation-iteration-count: 1;
-    animation-timing-function: ease;
     opacity: 0;
-    animation-fill-mode: forwards;
+    animation-name: fadein;
+}
+
+.old-tile
+{
+    opacity: 0;
+    animation-name: fadein;
 }
 
 .active-tile
@@ -97,6 +99,10 @@ body
     height: 100%;
     width: 100%;
     border-radius: 8px;
+    animation-duration: 0.5s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
 }
 
 #status-ui

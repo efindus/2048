@@ -54,6 +54,7 @@ const getValue = (x, y, isSideways = false) => {
  * @param {number?} data.lastPosition.y
  * @param {boolean?} data.isSideways
  * @param {boolean?} data.doNotRecord
+ * @param {boolean?} data.fastAnimate
  */
 const setValue = (data) => {
     if (data.isSideways) [ data.x, data.y ] = swap(data.x, data.y), data.lastPosition ? 
@@ -69,9 +70,10 @@ const setValue = (data) => {
     if (data.lastPosition) setValue({ x: data.lastPosition.x, y: data.lastPosition.y, doNotRecord: true });
 
     const tile = document.getElementById(`tile-${data.x}-${data.y}`);
-    tile.innerHTML = data.value ? `<div class="active-tile ${data.lastPosition ? '' : ' new-tile'}">${data.value}</div>` : '';
+    tile.innerHTML = data.value ? `<div class="active-tile${data.lastPosition ? '' : (data.fastAnimate ? ' old-tile' : ' new-tile')}">${data.value}</div>` : '';
 
     if (data.lastPosition) {
+        data.isSideways = data.y - data.lastPosition.y !== 0;
         const block = tile.children[0], offset = -19 * (data.isSideways ? data.y - data.lastPosition.y : data.x - data.lastPosition.x);
 
         block.style.transform = `translate${data.isSideways ? 'X' : 'Y'}(${offset < 0 ? 'max' : 'min'}(${offset}vh, ${offset}vw))`;
@@ -248,6 +250,7 @@ const load = () => {
                         x: change.add.x,
                         y: change.add.y,
                         lastPosition: change.remove,
+                        fastAnimate: true,
                         doNotRecord: true,
                     });
                 }
