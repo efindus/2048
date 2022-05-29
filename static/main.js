@@ -29,7 +29,7 @@ const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
 const restartButton = document.getElementById('restart-button');
 const undoButton = document.getElementById('undo-button');
-const moves = [];
+let moves = [];
 let score = 0, currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
 
 const swap = (a, b) => {
@@ -194,6 +194,7 @@ const moveToSide = (side) => {
 
 const generateBoard = () => {
     score = 0;
+    moves = [];
 
     boxContainer.innerHTML = '';
     title.innerHTML = '2048';
