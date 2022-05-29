@@ -1,0 +1,52 @@
+{
+    "name": "2048",
+    "short_name": "2k48",
+    "start_url": "../",
+    "display": "standalone",
+    "background_color": "#191a19",
+    "theme_color": "#18ed6d",
+    "description": "Year 2k48 coming soon!",
+    "icons": [
+        {
+            "src": "logo.png",
+            "sizes": "4422x4422",
+            "type": "image/png"
+        },
+        {
+            "src": "logo128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        },
+        {
+            "src": "logo144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        },
+        {
+            "src": "logo144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        },
+        {
+            "src": "logo192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "logo192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "logo192t.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "logo192t2.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
