@@ -17,6 +17,7 @@
 {
     box-sizing: border-box;
     user-select: none;
+    overscroll-behavior-y: contain;
 }
 
 body
