@@ -24,13 +24,20 @@ content.innerHTML =
     <div id="restart-button" class="button-style">Restart</div>
 </div>`
 
+const gen4X4Val = (val) => {
+    const res = [];
+    for (let i = 0; i < 4; i++) res.push([ val, val, val, val ]);
+    return res;
+}
+
 const title = document.querySelector('.title');
 const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
 const restartButton = document.getElementById('restart-button');
 const undoButton = document.getElementById('undo-button');
-let moves = [];
-let score = 0, currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
+
+let gameState = { boardSize: 4, score: 0, board: gen4X4Val(''), moves: [] };
+let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
 
 const swap = (a, b) => {
     a += b, b = a - b, a = a - b;
@@ -71,6 +78,7 @@ const setValue = (data) => {
 
     const tile = document.getElementById(`tile-${data.x}-${data.y}`);
     tile.innerHTML = data.value ? `<div class="active-tile${data.lastPosition ? '' : (data.fastAnimate ? ' old-tile' : ' new-tile')}">${data.value}</div>` : '';
+    gameState.board[data.x][data.y] = data.value ?? '';
 
     if (data.lastPosition) {
         data.isSideways = data.y - data.lastPosition.y !== 0;
@@ -132,20 +140,14 @@ const spawnNumber = () => {
     else setValue({ value: '4', x, y });
 }
 
-const gen4X4Val = (val) => {
-    const res = [];
-    for (let i = 0; i < 4; i++) res.push([ val, val, val, val ]);
-    return res;
-}
-
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const moveToSide = (side) => {
-    moves.push({
-        score,
+    gameState.moves.push({
+        score: gameState.score,
         changes: [],
     });
 
-    currentMove = moves[moves.length - 1];
+    currentMove = gameState.moves[gameState.moves.length - 1];
     const lockedIn = gen4X4Val(false);
     let moved = false;
 
@@ -164,8 +166,8 @@ const moveToSide = (side) => {
 
                     if (value === currentValue && !lockedIn[i][y]) {
                         currentValue = `${+value * 2}`;
-                        score += +currentValue;
-                        scoreLabel.innerHTML = `Score: ${score}`;
+                        gameState.score += +currentValue;
+                        scoreLabel.innerHTML = `Score: ${gameState.score}`;
 
                         moved = true;
                         setValue({ value: currentValue, x: i, y, isSideways, lastPosition: { x, y } });
@@ -187,15 +189,14 @@ const moveToSide = (side) => {
     if (moved) {
         if (verifySpace()) spawnNumber();
         if (!verifySpace() && !verifyMoves()) document.querySelector('.title').innerHTML = 'You lost!';
-    } else moves.pop();
 
-    if (moves.length > 25) moves.shift();
+        if (gameState.moves.length > 25) gameState.moves.shift();
+
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+    } else gameState.moves.pop();
 }
 
-const generateBoard = () => {
-    score = 0;
-    moves = [];
-
+const generateBoard = (newGame = true) => {
     boxContainer.innerHTML = '';
     title.innerHTML = '2048';
     scoreLabel.innerHTML = 'Score: 0';
@@ -204,12 +205,44 @@ const generateBoard = () => {
         boxContainer.innerHTML += `<div id="tile-${Math.floor(i / 4)}-${i % 4}"></div>`;
     }
 
-    spawnNumber();
-    spawnNumber();
+    if (newGame) {
+        gameState.score = 0;
+        gameState.moves = [];
+        gameState.board = gen4X4Val('');
+
+        spawnNumber();
+        spawnNumber();
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+    }
+}
+
+const restoreState = () => {
+    gameState = JSON.parse(localStorage.getItem('gameState'));
+
+    scoreLabel.innerHTML = `Score: ${gameState.score}`;
+
+    for (let x = 0; x < 4; x++) {
+        for (let y = 0; y < 4; y++) {
+            if (gameState.board[x][y] !== '') {
+                setValue({
+                    value: gameState.board[x][y],
+                    x, y,
+                    doNotRecord: true,
+                    fastAnimate: true,
+                });
+            }
+        }
+    }
 }
 
 const load = () => {
-    generateBoard();
+    if (!localStorage.getItem('gameState')) {
+        localStorage.setItem('gameState', JSON.stringify(gameState));
+        generateBoard();
+    } else {
+        generateBoard(false);
+        restoreState();
+    }
 
     const eventHandler = event => {
         switch(event?.detail?.dir ?? event.keyCode) {
@@ -237,10 +270,10 @@ const load = () => {
 
     restartButton.onclick = generateBoard;
     undoButton.onclick = () => {
-        if (moves.length) {
-            currentMove = moves.pop();
-            score = currentMove.score;
-            scoreLabel.innerHTML = `Score: ${score}`;
+        if (gameState.moves.length) {
+            currentMove = gameState.moves.pop();
+            gameState.score = currentMove.score;
+            scoreLabel.innerHTML = `Score: ${gameState.score}`;
             currentMove.changes.reverse();
 
             for (const change of currentMove.changes) {
