@@ -106,7 +106,7 @@ body
     animation-fill-mode: forwards;
 }
 
-#status-ui
+#ui
 {
     grid-row: 3;
     grid-column: 2;
@@ -180,6 +180,11 @@ body
     body
     {
         font-size: 20px;
+    }
+
+    .container
+    {
+        padding: 27px 0px 5px 0px;
     }
 
     .select-style

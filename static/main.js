@@ -19,7 +19,7 @@ content.innerHTML =
 `<div class="title">2048</div>
 <div id="score">Score: 2048</div>
 <div id="box"></div>
-<div id="status-ui">
+<div id="ui">
     <div id="undo-button" class="button-style">Undo</div>
     <div id="restart-button" class="button-style">Restart</div>
 </div>`
@@ -45,7 +45,7 @@ const random = (min, max) => Math.round(min + (max - min) * Math.random());
 
 const delay = async time => new Promise(resolve => setTimeout(resolve, time));
 
-let gameState = { boardSize: 4, score: 0, board: genBoard(''), moves: [] };
+let gameState = { boardSize: 4, score: 0, board: genBoard(''), moves: [], bestScore: 0 };
 let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
 
 const getValue = (x, y, isSideways = false) => {
@@ -157,7 +157,7 @@ const moveToSide = (side) => {
 
     let indexStart = 0, indexEnd = 3, direction = 1, isSideways = false;
     if (side === 3 || side === 4) isSideways = true;
-    if (side === 2 || side === 4) indexStart = 3, indexEnd = 0, direction = -1;
+    if (side === 2 || side === 4) [ indexStart, indexEnd ] = swap(indexStart, indexEnd), direction = -1;
 
     for (let x = indexStart + 1 * direction; x !== indexEnd + 1 * direction; x += direction) {
         for (let y = 0; y < 4; y++) {
@@ -171,7 +171,6 @@ const moveToSide = (side) => {
                     if (value === currentValue && !lockedIn[i][y]) {
                         currentValue = `${+value * 2}`;
                         gameState.score += +currentValue;
-                        scoreLabel.innerHTML = `Score: ${gameState.score}`;
 
                         moved = true;
                         setValue({ value: currentValue, x: i, y, isSideways, lastPosition: { x, y } });
@@ -195,6 +194,9 @@ const moveToSide = (side) => {
         if (!verifySpace() && !verifyMoves()) document.querySelector('.title').innerHTML = 'You lost!';
 
         if (gameState.moves.length > 25) gameState.moves.shift();
+        if (gameState.bestScore < gameState.score) gameState.bestScore = gameState.score;
+
+        scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
 
         localStorage.setItem('gameState', JSON.stringify(gameState));
     } else gameState.moves.pop();
@@ -203,7 +205,7 @@ const moveToSide = (side) => {
 const setupBoard = (newGame = true) => {
     boxContainer.innerHTML = '';
     title.innerHTML = '2048';
-    scoreLabel.innerHTML = 'Score: 0';
+    scoreLabel.innerHTML = `Score: 0 [best: ${gameState.bestScore}]`;
 
     for (let i = 0; i < 16; i++) {
         boxContainer.innerHTML += `<div id="tile-${Math.floor(i / 4)}-${i % 4}"></div>`;
@@ -221,9 +223,9 @@ const setupBoard = (newGame = true) => {
 }
 
 const restoreState = () => {
-    gameState = JSON.parse(localStorage.getItem('gameState'));
+    gameState = Object.assign(gameState, JSON.parse(localStorage.getItem('gameState')));
 
-    scoreLabel.innerHTML = `Score: ${gameState.score}`;
+    scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
 
     for (let x = 0; x < 4; x++) {
         for (let y = 0; y < 4; y++) {
@@ -277,7 +279,7 @@ const load = () => {
         if (gameState.moves.length) {
             currentMove = gameState.moves.pop();
             gameState.score = currentMove.score;
-            scoreLabel.innerHTML = `Score: ${gameState.score}`;
+            scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
             currentMove.changes.reverse();
 
             for (const change of currentMove.changes) {
