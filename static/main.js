@@ -24,28 +24,34 @@ content.innerHTML =
     <div id="restart-button" class="button-style">Restart</div>
 </div>`
 
-const gen4X4Val = (val) => {
-    const res = [];
-    for (let i = 0; i < 4; i++) res.push([ val, val, val, val ]);
-    return res;
-}
-
 const title = document.querySelector('.title');
 const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
 const restartButton = document.getElementById('restart-button');
 const undoButton = document.getElementById('undo-button');
 
-let gameState = { boardSize: 4, score: 0, board: gen4X4Val(''), moves: [] };
-let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
+const genBoard = (val, size = 4) => {
+    const res = [];
+    for (let i = 0; i < size; i++) res.push(Array(size).fill(val));
+    return res;
+}
 
 const swap = (a, b) => {
     a += b, b = a - b, a = a - b;
     return [ a, b ];
 }
 
+const random = (min, max) => Math.round(min + (max - min) * Math.random());
+
+const delay = async time => new Promise(resolve => setTimeout(resolve, time));
+
+let gameState = { boardSize: 4, score: 0, board: genBoard(''), moves: [] };
+let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
+
 const getValue = (x, y, isSideways = false) => {
     if (isSideways) [ x, y ] = swap(x, y);
+
+    // return gameState.board[x][y]; // <= this is a great optimization, but it somehow breaks the animations so I won't use it
 
     const tile = document.getElementById(`tile-${x}-${y}`);
     return tile.innerText !== '' ? tile.children[0].innerText : '';
@@ -89,8 +95,6 @@ const setValue = (data) => {
         setTimeout(() => block.style.transform = 'none');
     }
 }
-
-const random = (min, max) => Math.round(min + (max - min) * Math.random());
 
 const verifySpace = () => {
     let valid = false;
@@ -148,7 +152,7 @@ const moveToSide = (side) => {
     });
 
     currentMove = gameState.moves[gameState.moves.length - 1];
-    const lockedIn = gen4X4Val(false);
+    const lockedIn = genBoard(false);
     let moved = false;
 
     let indexStart = 0, indexEnd = 3, direction = 1, isSideways = false;
@@ -196,7 +200,7 @@ const moveToSide = (side) => {
     } else gameState.moves.pop();
 }
 
-const generateBoard = (newGame = true) => {
+const setupBoard = (newGame = true) => {
     boxContainer.innerHTML = '';
     title.innerHTML = '2048';
     scoreLabel.innerHTML = 'Score: 0';
@@ -208,7 +212,7 @@ const generateBoard = (newGame = true) => {
     if (newGame) {
         gameState.score = 0;
         gameState.moves = [];
-        gameState.board = gen4X4Val('');
+        gameState.board = genBoard('');
 
         spawnNumber();
         spawnNumber();
@@ -238,9 +242,9 @@ const restoreState = () => {
 const load = () => {
     if (!localStorage.getItem('gameState')) {
         localStorage.setItem('gameState', JSON.stringify(gameState));
-        generateBoard();
+        setupBoard();
     } else {
-        generateBoard(false);
+        setupBoard(false);
         restoreState();
     }
 
@@ -268,7 +272,7 @@ const load = () => {
     document.addEventListener('keydown', eventHandler);
     document.addEventListener('swiped', eventHandler);
 
-    restartButton.onclick = generateBoard;
+    restartButton.onclick = setupBoard;
     undoButton.onclick = () => {
         if (gameState.moves.length) {
             currentMove = gameState.moves.pop();
