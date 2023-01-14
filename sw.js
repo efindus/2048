@@ -36,7 +36,7 @@ self.addEventListener('fetch', event => {
 				});
 				return response;
 			}).catch(() => {
-				return caches.match('/static/logo.jpg');
+				return caches.match('/static/logo.png');
 			});
 		}
 	}));

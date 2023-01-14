@@ -289,7 +289,6 @@ const setupBoard = (newGame = true) => {
 	boxContainer.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
 	boxContainer.style.gap = '0px';
 	title.innerHTML = '2048';
-	scoreLabel.innerHTML = `Score: 0 [best: ${gameState.bestScore}]`;
 
 	for (let i = 0; i < gameState.boardSize ** 2; i++)
 		boxContainer.appendChild(document.createElement('div'));
@@ -321,14 +320,14 @@ const setupBoard = (newGame = true) => {
 		spawnNumber();
 		localStorage.setItem('gameState', JSON.stringify(gameState));
 	}
+
+	scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
 }
 
 const restoreState = () => {
 	gameState = Object.assign(gameState, JSON.parse(localStorage.getItem('gameState')));
-
-	scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
-
 	setupBoard(false);
+
 	for (let x = 0; x < gameState.boardSize; x++) {
 		for (let y = 0; y < gameState.boardSize; y++) {
 			if (gameState.board[x][y] !== '') {
