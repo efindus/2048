@@ -416,6 +416,8 @@ const load = () => {
 					});
 				}
 			}
+
+			localStorage.setItem('gameState', JSON.stringify(gameState));
 		}
 	}
 
