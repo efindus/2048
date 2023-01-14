@@ -44,7 +44,7 @@ let offsetConstant, settingsOpen = false;
 const swap = (a, b) => {
 	a += b, b = a - b, a = a - b;
 	return [ a, b ];
-}
+};
 
 const random = (min, max) => Math.round(min + (max - min) * Math.random());
 const delay = async time => new Promise(resolve => setTimeout(resolve, time));
@@ -55,7 +55,7 @@ const genBoard = (val) => {
 		res.push(Array(gameState.boardSize).fill(val));
 
 	return res;
-}
+};
 
 const getElementPosition = (element, noOffset = false) => {
 	const rect = element.getBoundingClientRect();
@@ -71,7 +71,7 @@ const getElementPosition = (element, noOffset = false) => {
 		bottom,
 		right,
 	};
-}
+};
 
 const toggleSettings = (forceClose = false) => {
 	if (forceClose)
@@ -83,7 +83,7 @@ const toggleSettings = (forceClose = false) => {
 		menu.style.display = 'flex', settingsClose.style.display = 'block';
 	else
 		menu.style.display = 'none', settingsClose.style.display = 'none';
-}
+};
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const translateCoordinates = (x, y, side) => {
@@ -94,13 +94,13 @@ const translateCoordinates = (x, y, side) => {
 		[ x, y ] = swap(x, y);
 
 	return [ x, y ];
-}
+};
 
 const getValue = (x, y, side = 1) => {
 	[ x, y ] = translateCoordinates(x, y, side);
 
 	return gameState.board[x][y];
-}
+};
 
 /**
  * @param {object} data
@@ -165,7 +165,7 @@ const setValue = (data) => {
 			} 
 		], { duration: 300, easing: 'ease', iterations: 1});
 	}
-}
+};
 
 const verifySpace = () => {
 	let valid = false;
@@ -179,7 +179,7 @@ const verifySpace = () => {
 	}
 
 	return valid;
-}
+};
 
 const verifyMoves = () => {
 	let valid = false;
@@ -202,7 +202,7 @@ const verifyMoves = () => {
 	}
 
 	return valid;
-}
+};
 
 const spawnNumber = () => {
 	let x, y;
@@ -214,7 +214,7 @@ const spawnNumber = () => {
 		setValue({ value: '2', x, y });
 	else
 		setValue({ value: '4', x, y });
-}
+};
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const moveToSide = (side) => {
@@ -280,7 +280,7 @@ const moveToSide = (side) => {
 	} else {
 		gameState.moves.pop();
 	}
-}
+};
 
 const setupBoard = (newGame = true) => {
 	toggleSettings(true);
@@ -322,7 +322,7 @@ const setupBoard = (newGame = true) => {
 	}
 
 	scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
-}
+};
 
 const restoreState = () => {
 	gameState = Object.assign(gameState, JSON.parse(localStorage.getItem('gameState')));
@@ -340,7 +340,7 @@ const restoreState = () => {
 			}
 		}
 	}
-}
+};
 
 const load = () => {
 	if (!localStorage.getItem('gameState'))
@@ -370,7 +370,7 @@ const load = () => {
 			moveToSide(4);
 			break;
 		}
-	}
+	};
 
 	document.addEventListener('keydown', eventHandler);
 	document.addEventListener('swiped', eventHandler);
@@ -386,9 +386,9 @@ const load = () => {
 		} else {
 			alert('You cannot change the board size while in game! Restart the game to change it.');
 		}
-	}
+	};
 
-	restartButton.onclick = setupBoard;
+	restartButton.onclick = () => setupBoard(true);
 	menu.onclick = (e) => e.stopPropagation();
 	settingsToggle.onclick = () => toggleSettings();
 	settingsClose.onclick = () => toggleSettings(true);
@@ -419,7 +419,7 @@ const load = () => {
 
 			localStorage.setItem('gameState', JSON.stringify(gameState));
 		}
-	}
+	};
 
 	toggleUndoButton.onclick = () => {
 		toggleSettings(true);
@@ -434,7 +434,7 @@ const load = () => {
 		} else {
 			alert('You cannot toggle undo while in game! Restart the game to change it.');
 		}
-	}
-}
+	};
+};
 
 load();
