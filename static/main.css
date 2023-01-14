@@ -1,303 +1,268 @@
 @font-face {
-    font-family: 'Roboto';
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url('./Roboto.woff2') format('woff2');
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('./Roboto.woff2') format('woff2');
 }
 
 /* Animations */
 @keyframes fadein {
-    0% { opacity: 0; }
-    100% { opacity: 1;}
+	0% { opacity: 0; }
+	100% { opacity: 1;}
 }
 
 /* Styles */
-*
-{
-    box-sizing: border-box;
-    user-select: none;
+* {
+	box-sizing: border-box;
+	user-select: none;
 }
 
-html, body
-{
-    margin: 0;
-    height: 100%;
-    width: 100%;
-    color: white;
-    background-color: #191a19;
-    font-size: 25px;
-    font-family: 'Roboto', sans-serif;
-    overscroll-behavior-y: none;
-    /* WebKit is fucking stupid: */
-    position: fixed;
-    overflow: hidden;
+html, body {
+	margin: 0;
+	height: 100%;
+	width: 100%;
+	color: white;
+	background-color: #191a19;
+	font-size: 25px;
+	font-family: 'Roboto', sans-serif;
+	overscroll-behavior-y: none;
+	/* WebKit is fucking stupid: */
+	position: fixed;
+	overflow: hidden;
 }
 
-.container
-{
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: auto min(75vw, 75vh) auto;
-    grid-template-rows: auto min(75vw, 75vh) auto;
-    padding: 10px 0px;
+.container {
+	width: 100%;
+	height: 100%;
+	display: grid;
+	grid-template-columns: auto min(75vw, 75vh) auto;
+	grid-template-rows: auto min(75vw, 75vh) auto;
+	padding: 10px 0px;
 }
 
-.title
-{
-    font-size: 50px;
-    font-weight: 500;
-    margin-bottom: 9px;
-    text-align: center;
-    grid-row: 1;
-    grid-column: 1 / 4;
+.title {
+	font-size: 50px;
+	font-weight: 500;
+	margin-bottom: 9px;
+	text-align: center;
+	grid-row: 1;
+	grid-column: 1 / 4;
 }
 
-#score
-{
-    position: absolute;
-    left: 5px;
-    top: 1px;
+#score {
+	position: absolute;
+	left: 5px;
+	top: 1px;
 }
 
-#settings
-{
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    color: #8b949e;
-    fill: currentColor;
-    display: flex;
-    flex-direction: column;
-    align-items: end;
+#settings {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	color: #8b949e;
+	fill: currentColor;
+	display: flex;
+	flex-direction: column;
+	align-items: end;
 }
 
-#settings-toggle
-{
-    cursor: pointer;
+#settings-toggle {
+	cursor: pointer;
 }
 
-#settings-toggle:hover
-{
-    color: #9fa8b3
+#settings-toggle:hover {
+	color: #9fa8b3
 }
 
-#settings-close
-{
-    position: absolute;
-    display: none;
-    top: -10px;
-    right: -10px;
-    width: 100vw;
-    height: 100vh;
+#settings-close {
+	position: absolute;
+	display: none;
+	top: -10px;
+	right: -10px;
+	width: 100vw;
+	height: 100vh;
 }
 
-#menu
-{
-    color: white;
-    background-color: #313331;
-    border-radius: 6px;
-    padding: 4px 0px;
-    margin-top: 8px;
-    display: none;
-    z-index: 1;
-    flex-direction: column;
+#menu {
+	color: white;
+	background-color: #313331;
+	border-radius: 6px;
+	padding: 4px 0px;
+	margin-top: 8px;
+	display: none;
+	z-index: 1;
+	flex-direction: column;
 }
 
-.menu-row
-{
-    text-align: center;
-    cursor: pointer;
-    padding: 1px 24px;
+.menu-row {
+	text-align: center;
+	cursor: pointer;
+	padding: 1px 24px;
 }
 
-.menu-row:hover
-{
-    background-color: #373a37;
+.menu-row:hover {
+	background-color: #373a37;
 }
 
-#box
-{
-    grid-row: 2;
-    grid-column: 2;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 7px;
-    --font-size-formula: min(5.7vh, 5.7vw);
+#box {
+	grid-row: 2;
+	grid-column: 2;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	grid-template-rows: repeat(4, 1fr);
+	gap: 7px;
+	--font-size-formula: min(5.7vh, 5.7vw);
 }
 
-#box > div
-{
-    background-color: #313331;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: var(--font-size-formula);
-    font-weight: 500;
-    border-radius: 8px;
+#box > div {
+	background-color: #313331;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: var(--font-size-formula);
+	font-weight: 500;
+	border-radius: 8px;
 }
 
-.new-tile
-{
-    animation-delay: 0.3s;
-    opacity: 0;
-    animation-name: fadein;
+.new-tile {
+	animation-delay: 0.3s;
+	opacity: 0;
+	animation-name: fadein;
 }
 
-.old-tile
-{
-    opacity: 0;
-    animation-name: fadein;
+.old-tile {
+	opacity: 0;
+	animation-name: fadein;
 }
 
-.active-tile
-{
-    background-color: #545854;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    border-radius: 8px;
-    animation-duration: 0.5s;
-    animation-iteration-count: 1;
-    animation-timing-function: ease;
-    animation-fill-mode: forwards;
+.active-tile {
+	background-color: #545854;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	width: 100%;
+	border-radius: 8px;
+	animation-duration: 0.5s;
+	animation-iteration-count: 1;
+	animation-timing-function: ease;
+	animation-fill-mode: forwards;
 }
 
-#ui
-{
-    grid-row: 3;
-    grid-column: 2;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
+#ui {
+	grid-row: 3;
+	grid-column: 2;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
 }
 
-.select-style
-{
-    height: 52px;
-    box-sizing: border-box;
-    padding: 8px 12px;
-    background-color: rgb(30, 30, 30);
-    border: 2px solid rgb(56, 56, 61);
-    border-radius: 5px;
-    color: rgb(255, 255, 255);
-    font-size: 22px;
-    font-family: 'Roboto', sans-serif;
-    outline: 0px;
-    margin-left: 8px;
+.select-style {
+	height: 52px;
+	box-sizing: border-box;
+	padding: 8px 12px;
+	background-color: rgb(30, 30, 30);
+	border: 2px solid rgb(56, 56, 61);
+	border-radius: 5px;
+	color: rgb(255, 255, 255);
+	font-size: 22px;
+	font-family: 'Roboto', sans-serif;
+	outline: 0px;
+	margin-left: 8px;
 }
 
-.button-style
-{
-    margin: auto;
-    margin-top: 15px;
-    padding: 6px 30px;
-    width: fit-content;
-    background-color: #1a73e8;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    cursor: pointer;
-    user-select: none;
+.button-style {
+	margin: auto;
+	margin-top: 15px;
+	padding: 6px 30px;
+	width: fit-content;
+	background-color: #1a73e8;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 500;
+	cursor: pointer;
+	user-select: none;
 }
 
-.button-style:hover
-{
-    background-color: #1a40e8;
+.button-style:hover {
+	background-color: #1a40e8;
 }
 
-.button-style:active
-{
-    background-color: #130fee;
+.button-style:active {
+	background-color: #130fee;
 }
 
-.nojs
-{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 10px;
+.nojs {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	padding: 10px;
 }
 
 @media only screen and (max-width: 770px) {
-    .title
-    {
-        font-size: 28px;
-    }
+	.title {
+		font-size: 28px;
+	}
 
-    body
-    {
-        font-size: 20px;
-    }
+	body {
+		font-size: 20px;
+	}
 
-    .container
-    {
-        padding: 27px 0px 5px 0px;
-    }
+	.container {
+		padding: 27px 0px 5px 0px;
+	}
 
-    .select-style
-    {
-        font-size: 20px;
-        max-width: 200px;
-    }
+	.select-style {
+		font-size: 20px;
+		max-width: 200px;
+	}
 }
 
 @media only screen and (max-width: 380px){
-    .title
-    {
-        font-size: 22px;
-    }
+	.title {
+		font-size: 22px;
+	}
 
-    body
-    {
-        font-size: 18px;
-    }
+	body {
+		font-size: 18px;
+	}
 
-    .select-style
-    {
-        font-size: 20px;
-        max-width: 200px;
-    }
+	.select-style {
+		font-size: 20px;
+		max-width: 200px;
+	}
 
-    .button-style
-    {
-        padding: 5px 10px;
-    }
+	.button-style {
+		padding: 5px 10px;
+	}
 }
 
 @media only screen and (max-height: 680px) {
-    .title
-    {
-        font-size: 28px;
-        margin-bottom: 3px;
-    }
+	.title {
+		font-size: 28px;
+		margin-bottom: 3px;
+	}
 
-    body
-    {
-        font-size: 20px;
-    }
+	body {
+		font-size: 20px;
+	}
 
-    .select-style
-    {
-        font-size: 20px;
-        max-width: 200px;
-    }
+	.select-style {
+		font-size: 20px;
+		max-width: 200px;
+	}
 
-    .button-style
-    {
-        padding: 5px 20px;
-    }
+	.button-style {
+		padding: 5px 20px;
+	}
 }
