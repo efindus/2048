@@ -24,6 +24,22 @@ content.innerHTML =
 	<div id="restart-button" class="button-style">Restart</div>
 </div>`;
 
+const colors = [
+	{ bg: '#eee4da', fg: '#776e65' },
+	{ bg: '#eee1c9', fg: '#776e65' },
+	{ bg: '#f6803d' },
+	{ bg: '#f3b27a' },
+	{ bg: '#f69664' },
+	{ bg: '#f77c5f' },
+	{ bg: '#f75f3b' },
+	{ bg: '#edd073' },
+	{ bg: '#edcc62' },
+	{ bg: '#edc950' },
+	{ bg: '#edc53f' },
+	{ bg: '#edc22e' },
+	{ bg: '#3c3a33' },
+];
+
 const title = document.querySelector('.title');
 const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
@@ -98,7 +114,11 @@ const setValue = (data) => {
 		return tile.replaceChildren();
 
 	const element = document.createElement('div');
-	element.className = 'active-tile', element.innerHTML = data.value;
+	const palette = colors[Math.min(Math.log2(+data.value), colors.length) - 1];
+	element.className = 'active-tile', element.innerHTML = data.value, element.style.backgroundColor = palette.bg;
+	if (palette.fg)
+		element.style.color = palette.fg;
+
 	if (!data.lastPosition)
 		element.classList.add(data.fastAnimate ? 'old-tile' : 'new-tile');
 
