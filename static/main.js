@@ -1,5 +1,5 @@
-if ('serviceWorker' in navigator)
-	navigator.serviceWorker.register('/sw.js');
+// if ('serviceWorker' in navigator)
+// 	navigator.serviceWorker.register('/sw.js');
 
 const colors = [
 	{ bg: '#eee4da', fg: '#776e65' },
@@ -21,15 +21,22 @@ const title = document.querySelector('.title');
 const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
 const undoButton = document.getElementById('undo-button');
+
+const menu = document.getElementById('menu');
+const settingsToggle = document.getElementById('settings-toggle');
+const settingsClose = document.getElementById('settings-close');
 const restartButton = document.getElementById('restart-button');
+const toggleUndoButton = document.getElementById('toggle-undo-button');
+const boardSizeUpButton = document.getElementById('board-size-up-button');
+const boardSizeDownButton = document.getElementById('board-size-down-button');
 
 /**
  * @type {HTMLElement[][]}
  */
 let tiles = [];
-let gameState = { boardSize: 4, score: 0, board: [['']], moves: [], bestScore: 0 };
+let gameState = { boardSize: 4, score: 0, board: [['']], moves: [], bestScore: 0, disabledUndo: false, gameStarted: false };
 let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
-let offsetConstant;
+let offsetConstant, settingsOpen = false;
 
 const swap = (a, b) => {
 	a += b, b = a - b, a = a - b;
@@ -61,6 +68,18 @@ const getElementPosition = (element, noOffset = false) => {
 		bottom,
 		right,
 	};
+}
+
+const toggleSettings = (forceClose = false) => {
+	if (forceClose)
+		settingsOpen = false;
+	else
+		settingsOpen = !settingsOpen;
+
+	if (settingsOpen)
+		menu.style.display = 'flex', settingsClose.style.display = 'block';
+	else
+		menu.style.display = 'none', settingsClose.style.display = 'none';
 }
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
@@ -193,6 +212,8 @@ const spawnNumber = () => {
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const moveToSide = (side) => {
+	toggleSettings(true);
+	gameState.gameStarted = true;
 	gameState.moves.push({
 		score: gameState.score,
 		changes: [],
@@ -239,8 +260,11 @@ const moveToSide = (side) => {
 		if (!verifySpace() && !verifyMoves())
 			document.querySelector('.title').innerHTML = 'You lost!';
 
-		if (gameState.moves.length > 25)
+		if (gameState.disabledUndo)
+			gameState.moves.pop();
+		else if (gameState.moves.length > 25)
 			gameState.moves.shift();
+
 		if (gameState.bestScore < gameState.score)
 			gameState.bestScore = gameState.score;
 
@@ -253,6 +277,7 @@ const moveToSide = (side) => {
 }
 
 const setupBoard = (newGame = true) => {
+	toggleSettings(true);
 	boxContainer.innerHTML = '';
 	boxContainer.style.gridTemplateRows = `repeat(${gameState.boardSize}, 1fr)`;
 	boxContainer.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
@@ -266,24 +291,25 @@ const setupBoard = (newGame = true) => {
 	const children = [ ...boxContainer.children ];
 	tiles = Array.from({ length: gameState.boardSize }, (_, i) => children.slice(i * gameState.boardSize, (i * gameState.boardSize) + gameState.boardSize));
 	
-	const elementPos = getElementPosition(tiles[0][0], true),
+	const scaleConstant = 0.1777,
+	      elementPos = getElementPosition(tiles[0][0], true),
 	      elementSize = elementPos.bottom - elementPos.top,
-	      ratioW = elementSize / document.documentElement.clientWidth,
-	      ratioH = elementSize / document.documentElement.clientHeight,
-	      value = `${(0.013 * Math.max(ratioH, ratioW) / 0.1777) * 100}`;
+	      offsetH = (getElementPosition(tiles[1][0]).top - elementPos.top) / document.documentElement.clientHeight,
+	      offsetW = (getElementPosition(tiles[0][1]).left - elementPos.left) / document.documentElement.clientWidth,
+	      ratio = Math.max(elementSize / document.documentElement.clientWidth, elementSize / document.documentElement.clientHeight),
+	      value = `${(0.013 * ratio / scaleConstant) * 100}`,
+	      fontValue = `${(0.057 * ratio / scaleConstant) * 100}`;
 
 	boxContainer.style.gap = `min(${value}vh, ${value}vw)`;
-
-	const topPos = getElementPosition(tiles[0][0]),
-	      offsetH = (getElementPosition(tiles[1][0]).top - topPos.top) / document.documentElement.clientHeight,
-	      offsetW = (getElementPosition(tiles[0][1]).left - topPos.left) / document.documentElement.clientWidth;
-
+	boxContainer.style.setProperty('--font-size-formula', `min(${fontValue}vh, ${fontValue}vw)`);
 	offsetConstant = Math.max(offsetH, offsetW) * 100;
 
 	if (newGame) {
 		gameState.score = 0;
 		gameState.moves = [];
 		gameState.board = genBoard('');
+		gameState.gameStarted = false;
+		gameState.disabledUndo = gameState.disabledUndo ?? false;
 
 		spawnNumber();
 		spawnNumber();
@@ -317,6 +343,9 @@ const load = () => {
 	else
 		restoreState();
 
+	if (gameState.disabledUndo)
+		undoButton.style.display = 'none';
+
 	const eventHandler = event => {
 		switch(event?.detail?.dir ?? event.keyCode) {
 		case 38:
@@ -341,7 +370,25 @@ const load = () => {
 	document.addEventListener('keydown', eventHandler);
 	document.addEventListener('swiped', eventHandler);
 
+	const changeBoardSize = (diff) => {
+		if (!gameState.gameStarted) {
+			if (gameState.boardSize + diff < 2 || 9 < gameState.boardSize + diff) {
+				alert('You cannot set this size!');
+			} else {
+				gameState.boardSize += diff;
+				setupBoard();
+			}
+		} else {
+			alert('You cannot change the board size while in game! Restart the game to change it.');
+		}
+	}
+
 	restartButton.onclick = setupBoard;
+	menu.onclick = (e) => e.stopPropagation();
+	settingsToggle.onclick = () => toggleSettings();
+	settingsClose.onclick = () => toggleSettings(true);
+	boardSizeUpButton.onclick = () => changeBoardSize(1);
+	boardSizeDownButton.onclick = () => changeBoardSize(-1);
 	undoButton.onclick = () => {
 		if (gameState.moves.length) {
 			currentMove = gameState.moves.pop();
@@ -364,6 +411,21 @@ const load = () => {
 					});
 				}
 			}
+		}
+	}
+
+	toggleUndoButton.onclick = () => {
+		toggleSettings(true);
+		if (!gameState.gameStarted) {
+			gameState.disabledUndo = !gameState.disabledUndo;
+			if (gameState.disabledUndo) {
+				undoButton.style.display = 'none';
+				alert('Keep in mind that you cannot enable undo later!');
+			} else {
+				undoButton.style.display = 'flex';
+			}
+		} else {
+			alert('You cannot toggle undo while in game! Restart the game to change it.');
 		}
 	}
 }
