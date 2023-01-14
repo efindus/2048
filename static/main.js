@@ -1,16 +1,6 @@
 if ('serviceWorker' in navigator)
 	navigator.serviceWorker.register('/sw.js');
 
-const content = document.getElementById('content');
-content.innerHTML =
-`<div class="title">2048</div>
-<div id="score">Score: 2048</div>
-<div id="box"></div>
-<div id="ui">
-	<div id="undo-button" class="button-style">Undo</div>
-	<div id="restart-button" class="button-style">Restart</div>
-</div>`;
-
 const colors = [
 	{ bg: '#eee4da', fg: '#776e65' },
 	{ bg: '#eee1c9', fg: '#776e65' },
@@ -30,16 +20,16 @@ const colors = [
 const title = document.querySelector('.title');
 const boxContainer = document.getElementById('box');
 const scoreLabel = document.getElementById('score');
-const restartButton = document.getElementById('restart-button');
 const undoButton = document.getElementById('undo-button');
+const restartButton = document.getElementById('restart-button');
 
-const genBoard = (val, size = 4) => {
-	const res = [];
-	for (let i = 0; i < size; i++)
-		res.push(Array(size).fill(val));
-
-	return res;
-}
+/**
+ * @type {HTMLElement[][]}
+ */
+let tiles = [];
+let gameState = { boardSize: 4, score: 0, board: [['']], moves: [], bestScore: 0 };
+let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
+let offsetConstant;
 
 const swap = (a, b) => {
 	a += b, b = a - b, a = a - b;
@@ -49,16 +39,43 @@ const swap = (a, b) => {
 const random = (min, max) => Math.round(min + (max - min) * Math.random());
 const delay = async time => new Promise(resolve => setTimeout(resolve, time));
 
-/**
- * @type {HTMLElement[][]}
- */
-let tiles = [];
-let gameState = { boardSize: 4, score: 0, board: genBoard(''), moves: [], bestScore: 0 };
-let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
+const genBoard = (val) => {
+	const res = [];
+	for (let i = 0; i < gameState.boardSize; i++)
+		res.push(Array(gameState.boardSize).fill(val));
 
-const getValue = (x, y, isSideways = false) => {
-	if (isSideways)
+	return res;
+}
+
+const getElementPosition = (element, noOffset = false) => {
+	const rect = element.getBoundingClientRect();
+	const win = element.ownerDocument.defaultView;
+
+	let bottom = rect.bottom + win.pageYOffset, right = rect.right + win.pageXOffset;
+	if (!noOffset)
+		bottom = document.documentElement.clientHeight - bottom, right = document.documentElement.clientWidth - right;
+
+	return {
+		top: rect.top + win.pageYOffset,
+		left: rect.left + win.pageXOffset,
+		bottom,
+		right,
+	};
+}
+
+// side = 1 - up, 2 - down, 3 - left, 4 - right
+const translateCoordinates = (x, y, side) => {
+	if (side % 2 === 0)
+		x = (gameState.boardSize - 1) - x;
+
+	if (side >= 3)
 		[ x, y ] = swap(x, y);
+
+	return [ x, y ];
+}
+
+const getValue = (x, y, side = 1) => {
+	[ x, y ] = translateCoordinates(x, y, side);
 
 	return gameState.board[x][y];
 }
@@ -71,15 +88,15 @@ const getValue = (x, y, isSideways = false) => {
  * @param {object} data.lastPosition
  * @param {number?} data.lastPosition.x
  * @param {number?} data.lastPosition.y
- * @param {boolean?} data.isSideways
+ * @param {number?} data.side
  * @param {boolean?} data.doNotRecord
  * @param {boolean?} data.fastAnimate
  */
 const setValue = (data) => {
-	if (data.isSideways) {
-		[ data.x, data.y ] = swap(data.x, data.y);
+	if (data.side) {
+		[ data.x, data.y ] = translateCoordinates(data.x, data.y, data.side);
 		if (data.lastPosition)
-			[ data.lastPosition.x, data.lastPosition.y ] = swap(data.lastPosition.x, data.lastPosition.y);
+			[ data.lastPosition.x, data.lastPosition.y ] = translateCoordinates(data.lastPosition.x, data.lastPosition.y, data.side);
 	}
 
 	if (!data.doNotRecord) {
@@ -112,12 +129,12 @@ const setValue = (data) => {
 	tile.replaceChildren(element);
 
 	if (data.lastPosition) {
-		data.isSideways = (data.y - data.lastPosition.y) !== 0;
-		const offset = -19 * (data.isSideways ? data.y - data.lastPosition.y : data.x - data.lastPosition.x);
+		const isSideways = (data.y - data.lastPosition.y) !== 0;
+		const offset = -offsetConstant * (isSideways ? data.y - data.lastPosition.y : data.x - data.lastPosition.x);
 
 		element.animate([
 			{
-				transform: `translate${data.isSideways ? 'X' : 'Y'}(${offset < 0 ? 'max' : 'min'}(${offset}vh, ${offset}vw))`,
+				transform: `translate${isSideways ? 'X' : 'Y'}(${offset < 0 ? 'max' : 'min'}(${offset}vh, ${offset}vw))`,
 			}, {
 				transform: 'none',
 			} 
@@ -127,8 +144,8 @@ const setValue = (data) => {
 
 const verifySpace = () => {
 	let valid = false;
-	for (let x = 0; x < 4; x++) {
-		for (let y = 0; y < 4; y++) {
+	for (let x = 0; x < gameState.boardSize; x++) {
+		for (let y = 0; y < gameState.boardSize; y++) {
 			if (getValue(x, y) === '') {
 				valid = true;
 				break;
@@ -142,10 +159,11 @@ const verifySpace = () => {
 const verifyMoves = () => {
 	let valid = false;
 	for (let side = 0; side < 2; side++) {
-		for (let x = 0; x < 4; x++) {
+		for (let x = 0; x < gameState.boardSize; x++) {
 			let lastTile = '';
-			for (let y = 0; y < 4; y++) {
-				let currentTile = getValue(x, y, side);
+			for (let y = 0; y < gameState.boardSize; y++) {
+				const currentTile = getValue(x, y, (side * 2) + 1);
+
 				if (currentTile !== '') {
 					if (currentTile === lastTile) {
 						valid = true;
@@ -162,9 +180,10 @@ const verifyMoves = () => {
 }
 
 const spawnNumber = () => {
-	let x = random(0, 3), y = random(0, 3);
-	while (getValue(x, y, false) !== '')
-		x = random(0, 3), y = random(0, 3);
+	let x, y;
+	do {
+		x = random(0, gameState.boardSize - 1), y = random(0, gameState.boardSize - 1);
+	} while (getValue(x, y) !== '');
 
 	if (Math.random() < 0.7)
 		setValue({ value: '2', x, y });
@@ -183,36 +202,28 @@ const moveToSide = (side) => {
 	const lockedIn = genBoard(false);
 	let moved = false;
 
-	let indexStart = 0, indexEnd = 3, direction = 1, isSideways = false;
-	if (side >= 3)
-		isSideways = true;
-
-	if (side % 2 === 0)
-		[ indexStart, indexEnd ] = swap(indexStart, indexEnd), direction = -1;
-
-	for (let x = indexStart + 1 * direction; x !== indexEnd + 1 * direction; x += direction) {
-		for (let y = 0; y < 4; y++) {
+	for (let x = 1; x < gameState.boardSize; x++) {
+		for (let y = 0; y < gameState.boardSize; y++) {
 			if (lockedIn[x][y])
 				continue;
 
-			let currentValue = getValue(x, y, isSideways);
+			let currentValue = getValue(x, y, side);
 			if (currentValue !== '') {
-				for (let i = x - 1 * direction; i !== indexStart - 1 * direction; i -= direction) {
-					const value = getValue(i, y, isSideways);
+				for (let i = x - 1; i >= 0; i--) {
+					const value = getValue(i, y, side);
 
 					if (value === currentValue && !lockedIn[i][y]) {
 						currentValue = `${+value * 2}`;
 						gameState.score += +currentValue;
 
-						moved = true;
-						setValue({ value: currentValue, x: i, y, isSideways, lastPosition: { x, y } });
+						setValue({ value: currentValue, x: i, y: y, lastPosition: { x, y }, side });
 
-						lockedIn[i][y] = true;
+						moved = true, lockedIn[i][y] = true;
 						break;
-					} else if (value !== '' || (i === indexStart && (i -= direction || true)) || lockedIn[i][y]) {
-						if (x !== i + 1 * direction) {
+					} else if (value !== '' || (i === 0 && (i-- || true)) || lockedIn[i][y]) {
+						if (i !== x - 1) {
 							moved = true;
-							setValue({ value: currentValue, x: i + 1 * direction, y, isSideways, lastPosition: { x, y } });
+							setValue({ value: currentValue, x: i + 1, y: y, lastPosition: { x, y }, side });
 						}
 
 						break;
@@ -243,14 +254,31 @@ const moveToSide = (side) => {
 
 const setupBoard = (newGame = true) => {
 	boxContainer.innerHTML = '';
+	boxContainer.style.gridTemplateRows = `repeat(${gameState.boardSize}, 1fr)`;
+	boxContainer.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
+	boxContainer.style.gap = '0px';
 	title.innerHTML = '2048';
 	scoreLabel.innerHTML = `Score: 0 [best: ${gameState.bestScore}]`;
 
-	for (let i = 0; i < 16; i++)
+	for (let i = 0; i < gameState.boardSize ** 2; i++)
 		boxContainer.appendChild(document.createElement('div'));
 
 	const children = [ ...boxContainer.children ];
-	tiles = Array.from({ length: 4 }, (_, i) => children.slice(i * 4, (i * 4) + 4));
+	tiles = Array.from({ length: gameState.boardSize }, (_, i) => children.slice(i * gameState.boardSize, (i * gameState.boardSize) + gameState.boardSize));
+	
+	const elementPos = getElementPosition(tiles[0][0], true),
+	      elementSize = elementPos.bottom - elementPos.top,
+	      ratioW = elementSize / document.documentElement.clientWidth,
+	      ratioH = elementSize / document.documentElement.clientHeight,
+	      value = `${(0.013 * Math.max(ratioH, ratioW) / 0.1777) * 100}`;
+
+	boxContainer.style.gap = `min(${value}vh, ${value}vw)`;
+
+	const topPos = getElementPosition(tiles[0][0]),
+	      offsetH = (getElementPosition(tiles[1][0]).top - topPos.top) / document.documentElement.clientHeight,
+	      offsetW = (getElementPosition(tiles[0][1]).left - topPos.left) / document.documentElement.clientWidth;
+
+	offsetConstant = Math.max(offsetH, offsetW) * 100;
 
 	if (newGame) {
 		gameState.score = 0;
@@ -268,8 +296,9 @@ const restoreState = () => {
 
 	scoreLabel.innerHTML = `Score: ${gameState.score} [best: ${gameState.bestScore}]`;
 
-	for (let x = 0; x < 4; x++) {
-		for (let y = 0; y < 4; y++) {
+	setupBoard(false);
+	for (let x = 0; x < gameState.boardSize; x++) {
+		for (let y = 0; y < gameState.boardSize; y++) {
 			if (gameState.board[x][y] !== '') {
 				setValue({
 					value: gameState.board[x][y],
@@ -283,13 +312,10 @@ const restoreState = () => {
 }
 
 const load = () => {
-	if (!localStorage.getItem('gameState')) {
-		localStorage.setItem('gameState', JSON.stringify(gameState));
+	if (!localStorage.getItem('gameState'))
 		setupBoard();
-	} else {
-		setupBoard(false);
+	else
 		restoreState();
-	}
 
 	const eventHandler = event => {
 		switch(event?.detail?.dir ?? event.keyCode) {
