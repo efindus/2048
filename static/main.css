@@ -17,17 +17,21 @@
 {
     box-sizing: border-box;
     user-select: none;
-    overscroll-behavior-y: contain;
 }
 
-body
+html, body
 {
     margin: 0;
     height: 100%;
+    width: 100%;
     color: white;
     background-color: #191a19;
     font-size: 25px;
     font-family: 'Roboto', sans-serif;
+    overscroll-behavior-y: none;
+    /* WebKit is fucking stupid: */
+    position: fixed;
+    overflow: hidden;
 }
 
 .container
@@ -171,7 +175,7 @@ body
     padding: 10px;
 }
 
-@media only screen and (max-width: 650px) {
+@media only screen and (max-width: 770px) {
     .title
     {
         font-size: 28px;
@@ -222,11 +226,6 @@ body
     {
         font-size: 28px;
         margin-bottom: 3px;
-    }
-
-    .container
-    {
-        padding: 5px 0px;
     }
 
     body
