@@ -1,11 +1,11 @@
 {
     "name": "2048",
-    "short_name": "2k48",
+    "short_name": "2048",
     "start_url": "../",
     "display": "standalone",
     "background_color": "#191a19",
     "theme_color": "#18ed6d",
-    "description": "Year 2k48 coming soon!",
+    "description": "2048 game by efindus!",
     "icons": [
         {
             "src": "logo.png",
