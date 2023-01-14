@@ -14,6 +14,9 @@ const colors = [
 	{ bg: '#edc950' },
 	{ bg: '#edc53f' },
 	{ bg: '#edc22e' },
+	{ bg: 'linear-gradient(45deg, rgb(131, 58, 180) 0%, rgb(253, 29, 29) 50%, rgb(252, 176, 69) 100%)' },
+	{ bg: 'linear-gradient(135deg, rgb(225, 52, 84) 0%, rgb(255, 144, 56) 20%, rgb(254, 223, 67) 40%, rgb(133, 232, 140) 60%, rgb(25, 133, 185) 80%, rgb(133, 72, 180) 100%)', ts: '0px 0px 18px black' },
+	{ bg: 'linear-gradient(45deg, rgb(2, 0, 36) 0%, rgb(23, 23, 173) 33%, rgb(3, 142, 209) 67%, rgb(0, 212, 255) 100%)' },
 	{ bg: '#3c3a33' },
 ];
 
@@ -138,9 +141,12 @@ const setValue = (data) => {
 
 	const element = document.createElement('div');
 	const palette = colors[Math.min(Math.log2(+data.value), colors.length) - 1];
-	element.className = 'active-tile', element.innerHTML = data.value, element.style.backgroundColor = palette.bg;
+	element.className = 'active-tile', element.innerHTML = data.value, element.style.background = palette.bg;
 	if (palette.fg)
 		element.style.color = palette.fg;
+
+	if (palette.ts)
+		element.style.textShadow = palette.ts;
 
 	if (!data.lastPosition)
 		element.classList.add(data.fastAnimate ? 'old-tile' : 'new-tile');
@@ -298,7 +304,7 @@ const setupBoard = (newGame = true) => {
 	      offsetW = (getElementPosition(tiles[0][1]).left - elementPos.left) / document.documentElement.clientWidth,
 	      ratio = Math.max(elementSize / document.documentElement.clientWidth, elementSize / document.documentElement.clientHeight),
 	      value = `${(0.013 * ratio / scaleConstant) * 100}`,
-	      fontValue = `${(0.057 * ratio / scaleConstant) * 100}`;
+	      fontValue = `${(0.05 * ratio / scaleConstant) * 100}`;
 
 	boxContainer.style.gap = `min(${value}vh, ${value}vw)`;
 	boxContainer.style.setProperty('--font-size-formula', `min(${fontValue}vh, ${fontValue}vw)`);
