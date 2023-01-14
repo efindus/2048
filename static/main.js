@@ -39,7 +39,7 @@ const boardSizeDownButton = document.getElementById('board-size-down-button');
 let tiles = [];
 let gameState = { boardSize: 4, score: 0, board: [['']], moves: [], bestScore: 0, disabledUndo: false, gameStarted: false };
 let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
-let offsetConstant, settingsOpen = false;
+let offsetConstant, fontScaleFalloff, fontScaleBaseline, settingsOpen = false;
 
 const swap = (a, b) => {
 	a += b, b = a - b, a = a - b;
@@ -150,6 +150,10 @@ const setValue = (data) => {
 
 	if (!data.lastPosition)
 		element.classList.add(data.fastAnimate ? 'old-tile' : 'new-tile');
+
+	const overlength = Math.max(0, data.value.length - 5);
+	if (overlength)
+		element.style.fontSize = `min(${fontScaleBaseline - (overlength * fontScaleFalloff)}vh, ${fontScaleBaseline - (overlength * fontScaleFalloff)}vw)`;
 
 	tile.replaceChildren(element);
 
@@ -302,12 +306,14 @@ const setupBoard = (newGame = true) => {
 	      offsetH = (getElementPosition(tiles[1][0]).top - elementPos.top) / document.documentElement.clientHeight,
 	      offsetW = (getElementPosition(tiles[0][1]).left - elementPos.left) / document.documentElement.clientWidth,
 	      ratio = Math.max(elementSize / document.documentElement.clientWidth, elementSize / document.documentElement.clientHeight),
-	      value = `${(0.013 * ratio / scaleConstant) * 100}`,
-	      fontValue = `${(0.05 * ratio / scaleConstant) * 100}`;
+	      value = (0.013 * ratio / scaleConstant) * 100,
+	      fontValue = (0.05 * ratio / scaleConstant) * 100;
 
 	boxContainer.style.gap = `min(${value}vh, ${value}vw)`;
 	boxContainer.style.setProperty('--font-size-formula', `min(${fontValue}vh, ${fontValue}vw)`);
 	offsetConstant = Math.max(offsetH, offsetW) * 100;
+	fontScaleBaseline = fontValue;
+	fontScaleFalloff = 0.465 * ratio / scaleConstant;
 
 	if (newGame) {
 		gameState.score = 0;
