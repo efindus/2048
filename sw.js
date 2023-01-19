@@ -1,4 +1,4 @@
-const versionNumber = 'v11';
+const versionNumber = 'v12';
 
 self.addEventListener('install', event => {
 	event.waitUntil(
@@ -8,11 +8,11 @@ self.addEventListener('install', event => {
 				'/index.html',
 				'/favicon.ico',
 				'/static/logo.png',
-				'/static/logo128.png',
-				'/static/logo144.png',
-				'/static/logo192.png',
-				'/static/logo192t.png',
-				'/static/logo192t2.png',
+				'/static/logo/128.png',
+				'/static/logo/144.png',
+				'/static/logo/192.png',
+				'/static/logo/192t.png',
+				'/static/logo/192t2.png',
 				'/static/main.js',
 				'/static/swiped.min.js',
 				'/static/main.css',
@@ -48,9 +48,8 @@ self.addEventListener('activate', event => {
 	event.waitUntil(
 		caches.keys().then(keyList => {
 			return Promise.all(keyList.map(key => {
-				if (cacheKeeplist.indexOf(key) === -1) {
+				if (cacheKeeplist.indexOf(key) === -1)
 					return caches.delete(key);
-				}
 			}));
 		})
 	);
