@@ -36,7 +36,7 @@ const boardSizeDownButton = document.getElementById('board-size-down-button');
 /**
  * @type {HTMLElement[][]}
  */
-let tiles = [];
+let tiles = [], freeTiles = [];
 let gameState = { boardSize: 4, score: 0, board: [['']], moves: [], bestScore: 0, disabledUndo: false, gameStarted: false };
 let currentMove = { score: 0, changes: [ { value: '2', add: { x: 1, y: 2 }, remove: { x: 1, y: 2 } } ] };
 let offsetConstant, fontScaleFalloff, fontScaleBaseline, settingsOpen = false;
@@ -80,9 +80,9 @@ const toggleSettings = (forceClose = false) => {
 		settingsOpen = !settingsOpen;
 
 	if (settingsOpen)
-		menu.style.display = 'flex', settingsClose.style.display = 'block';
+		menu.style.display = 'flex', settingsClose.style.display = 'block', settingsToggle.style.color = '#bac0c8';
 	else
-		menu.style.display = 'none', settingsClose.style.display = 'none';
+		menu.style.display = 'none', settingsClose.style.display = 'none', settingsToggle.style.color = '';
 };
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
@@ -172,17 +172,15 @@ const setValue = (data) => {
 };
 
 const verifySpace = () => {
-	let valid = false;
+	freeTiles = [];
 	for (let x = 0; x < gameState.boardSize; x++) {
 		for (let y = 0; y < gameState.boardSize; y++) {
-			if (getValue(x, y) === '') {
-				valid = true;
-				break;
-			}
+			if (getValue(x, y) === '')
+				freeTiles.push({ x, y });
 		}
 	}
 
-	return valid;
+	return freeTiles.length > 0;
 };
 
 const verifyMoves = () => {
@@ -209,20 +207,19 @@ const verifyMoves = () => {
 };
 
 const spawnNumber = () => {
-	let x, y;
-	do {
-		x = random(0, gameState.boardSize - 1), y = random(0, gameState.boardSize - 1);
-	} while (getValue(x, y) !== '');
+	if (!verifySpace())
+		return false;
 
-	if (Math.random() < 0.7)
-		setValue({ value: '2', x, y });
-	else
-		setValue({ value: '4', x, y });
+	const spot = freeTiles[random(0, freeTiles.length - 1)];
+	setValue({ value: (Math.random() < 0.9) ? '2' : '4', x: spot.x, y: spot.y });
+	return true;
 };
 
 // side = 1 - up, 2 - down, 3 - left, 4 - right
 const moveToSide = (side) => {
-	toggleSettings(true);
+	if (settingsOpen)
+		return;
+
 	gameState.gameStarted = true;
 	gameState.moves.push({
 		score: gameState.score,
@@ -265,8 +262,7 @@ const moveToSide = (side) => {
 	}
 
 	if (moved) {
-		if (verifySpace())
-			spawnNumber();
+		spawnNumber();
 		if (!verifySpace() && !verifyMoves())
 			document.querySelector('.title').innerHTML = 'You lost!';
 
@@ -287,7 +283,6 @@ const moveToSide = (side) => {
 };
 
 const setupBoard = (newGame = true) => {
-	toggleSettings(true);
 	boxContainer.innerHTML = '';
 	boxContainer.style.gridTemplateRows = `repeat(${gameState.boardSize}, 1fr)`;
 	boxContainer.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
@@ -382,19 +377,35 @@ const load = () => {
 	document.addEventListener('swiped', eventHandler);
 
 	const changeBoardSize = (diff) => {
-		if (!gameState.gameStarted) {
-			if (gameState.boardSize + diff < 2 || 9 < gameState.boardSize + diff) {
-				alert('You cannot set this size!');
+		if (!gameState.gameStarted || !diff) {
+			const newSize = gameState.boardSize + diff;
+			if (newSize < 2 || 9 < newSize) {
+				return;
 			} else {
-				gameState.boardSize += diff;
-				setupBoard();
+				boardSizeDownButton.classList.add('active'), boardSizeUpButton.classList.add('active');
+				if (newSize === 2)
+					boardSizeDownButton.classList.remove('active');
+				else if (newSize === 9)
+					boardSizeUpButton.classList.remove('active');
+
+				gameState.boardSize = newSize;
+				if (diff)
+					setupBoard();
 			}
 		} else {
 			alert('You cannot change the board size while in game! Restart the game to change it.');
 		}
 	};
 
-	restartButton.onclick = () => setupBoard(true);
+	const setupButtons = () => {
+		changeBoardSize(0);
+	};
+
+	setupButtons();
+	restartButton.onclick = () => {
+		setupBoard(true);
+		toggleSettings(true);
+	};
 	menu.onclick = (e) => e.stopPropagation();
 	settingsToggle.onclick = () => toggleSettings();
 	settingsClose.onclick = () => toggleSettings(true);
@@ -433,7 +444,7 @@ const load = () => {
 			gameState.disabledUndo = !gameState.disabledUndo;
 			if (gameState.disabledUndo) {
 				undoButton.style.display = 'none';
-				alert('Keep in mind that you cannot enable undo later!');
+				alert('Keep in mind that you cannot re-enable undo later!');
 			} else {
 				undoButton.style.display = 'flex';
 			}

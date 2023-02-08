@@ -97,11 +97,17 @@ html, body {
 
 .menu-row {
 	text-align: center;
-	cursor: pointer;
+	cursor: not-allowed;
 	padding: 1px 24px;
+	color: #919191;
 }
 
-.menu-row:hover {
+.active.menu-row {
+	color: white;
+	cursor: pointer;
+}
+
+.active.menu-row:hover {
 	background-color: #373a37;
 }
 
