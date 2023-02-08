@@ -155,19 +155,23 @@ const setValue = (data) => {
 	if (overlength)
 		element.style.fontSize = `min(${fontScaleBaseline - (overlength * fontScaleFalloff)}vh, ${fontScaleBaseline - (overlength * fontScaleFalloff)}vw)`;
 
-	tile.replaceChildren(element);
-
 	if (data.lastPosition) {
-		const isSideways = (data.y - data.lastPosition.y) !== 0;
-		const offset = -offsetConstant * (isSideways ? data.y - data.lastPosition.y : data.x - data.lastPosition.x);
+		const isSideways = (data.y - data.lastPosition.y) !== 0,
+		      offset = -offsetConstant * (isSideways ? data.y - data.lastPosition.y : data.x - data.lastPosition.x),
+		      transformation = `translate${isSideways ? 'X' : 'Y'}(${offset < 0 ? 'max' : 'min'}(${offset}vh, ${offset}vw))`;
+
+		element.style.transform = transformation;
+		tile.replaceChildren(element);
 
 		element.animate([
 			{
-				transform: `translate${isSideways ? 'X' : 'Y'}(${offset < 0 ? 'max' : 'min'}(${offset}vh, ${offset}vw))`,
+				transform: transformation,
 			}, {
 				transform: 'none',
 			} 
-		], { duration: 300, easing: 'ease', iterations: 1});
+		], { duration: 300, easing: 'ease', iterations: 1, fill: 'forwards' });
+	} else {
+		tile.replaceChildren(element);
 	}
 };
 
